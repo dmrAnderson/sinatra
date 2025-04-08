@@ -1,10 +1,16 @@
 GEM
+  remote: https://rubygems.org/
   specs:
     base64 (0.2.0)
+    bigdecimal (3.1.5)
     logger (1.7.0)
     minitest (5.25.5)
     mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
+    nio4r (2.7.4)
+    pg (1.5.9)
+    puma (6.6.0)
+      nio4r (~> 2.0)
     rack (3.1.12)
     rack-protection (4.1.1)
       base64 (>= 0.1.0)
@@ -15,7 +21,11 @@ GEM
       rack (>= 3.0.0)
     rack-test (2.2.0)
       rack (>= 1.3)
+    rackup (2.2.1)
+      rack (>= 3)
     ruby2_keywords (0.0.5)
+    sequel (5.91.0)
+      bigdecimal
     sinatra (4.1.1)
       logger (>= 1.6.0)
       mustermann (~> 3.0)
@@ -26,11 +36,16 @@ GEM
     tilt (2.6.0)
 
 PLATFORMS
-  universal-darwin-24
+  ruby
+  x86_64-darwin-24
 
 DEPENDENCIES
   minitest
+  pg
+  puma
   rack-test
+  rackup
+  sequel
   sinatra
 
 BUNDLED WITH

@@ -1,24 +1,25 @@
-# Sinatra App
+# Instructions for Running the Sinatra Application with PostgreSQL and pgAdmin
 
-## How to Run the App
+This document explains how to use the provided `docker-compose.yml` to run a Sinatra app with PostgreSQL and pgAdmin.
 
-1. Install the required gems using Bundler:
-    ```sh
-    bundle install
-    ```
+## What We Have
 
-2. Run the Sinatra application:
-    ```sh
-    ruby app.rb
-    ```
+Defines `db` (PostgreSQL), `app` (Sinatra), and `pgadmin` services using Docker. Includes persistent volumes for database and pgAdmin data.
 
-3. Open your web browser and navigate to `http://localhost:4567` to see the app in action.
+## How to Use It
 
-## How to Test It
+1.  **Save `docker-compose.yml`:** Place the file in your Sinatra project root.
+2.  **Create `Dockerfile`:** In the same directory, create a Dockerfile to build your Sinatra app image. Ensure it sets up the environment and runs the app on port `4567`.
+3.  **Start Services:** Run `docker-compose up -d` in the terminal.
+4.  **Access App:** Open `http://localhost:4567` in your browser.
+5.  **Access pgAdmin:** Open `http://localhost:5050`, log in with `admin@admin.com` / `admin` (change password after login). Connect to the database in pgAdmin using host `db`, port `5432`, user `postgres`, password `postgres`, and database `sinatra_app`.
+6.  **Stop Services:** Run `docker-compose down`.
+7.  **Restart Services:** Run `docker-compose up -d`.
 
-1. Run the tests using Minitest:
-    ```sh
-    ruby app_test.rb
-    ```
+## Running Tests
 
-2. You should see the test results in the terminal.
+Execute your Sinatra tests using:
+
+```bash
+docker-compose run --rm app bundle exec ruby -Itest app_test.rb
+```
