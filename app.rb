@@ -28,37 +28,59 @@ helpers do
   def logout
     session[:user_id] = nil
   end
+
+  def authenticate!
+    redirect '/login' unless logged_in?
+  end
+
+  def not_authenticated!
+    redirect '/' if logged_in?
+  end
 end
 
 get '/' do
-  'Hello from Sinatra'
+  authenticate!
+  erb :index, layout: :application
+end
+
+get '/signup' do
+  not_authenticated!
+  erb :signup, layout: :application
 end
 
 post '/signup' do
+  not_authenticated!
   user = User.new(email: params[:email])
   user.password = params[:password]
   if user.valid?
     user.save
     login(user)
-    "User created"
+    redirect '/'
   else
     status 422
-    "Signup failed"
+    erb :signup, layout: :application
   end
 end
 
+get '/login' do
+  not_authenticated!
+  erb :login, layout: :application
+end
+
 post '/login' do
+  not_authenticated!
   user = User.where(email: params[:email]).first
   if user && user.valid_password?(params[:password])
     login(user)
     redirect '/'
   else
-    status 401
-    "Invalid credentials"
+    status 422
+    erb :login, layout: :application
   end
 end
 
-delete '/logout' do
+get '/logout' do
+  authenticate!
   logout
   redirect '/login'
 end
