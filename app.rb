@@ -10,6 +10,9 @@ set :session_secret, ENV.fetch('SUPER_SECRET_KEY', settings.database_url * 2)
 
 require './models/user'
 require './models/post'
+require './models/plan'
+
+set :plans, Plan.all
 
 enable :sessions
 

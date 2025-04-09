@@ -9,20 +9,22 @@
 <body>
 <header>
   <h1>Welcome to My Website</h1>
-  <blockquote>
-    <strong>Current User: <%= logged_in? ? current_user.email : 'Guest' %></strong>
-    <nav>
-      <ul>
-        <% if logged_in? %>
-          <li><a href="/">🏠 Dashboard</a></li>
-          <li><a href="/logout">🚪 Logout</a></li>
-        <% else %>
-          <li><a href="/login">🔑 Login</a></li>
-          <li><a href="/signup">✍️ Signup</a></li>
-        <% end %>
-      </ul>
-    </nav>
-  </blockquote>
+  <% if logged_in? %>
+    <blockquote>
+      <strong>Current User: <%= current_user.email %></strong>
+    </blockquote>
+  <% end %>
+  <nav>
+    <ul>
+      <% if logged_in? %>
+        <li><a href="/">🏠 Dashboard</a></li>
+        <li><a href="/logout">🚪 Logout</a></li>
+      <% else %>
+        <li><a href="/login">🔑 Login</a></li>
+        <li><a href="/signup">✍️ Signup</a></li>
+      <% end %>
+    </ul>
+  </nav>
 </header>
 <main>
   <%= yield %>
