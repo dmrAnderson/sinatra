@@ -5,16 +5,21 @@ require 'sequel'
 class Plan < Sequel::Model
   plugin :timestamps, update_on_create: true
 
+  BASIC = 10
+  STANDARD = 20
+  PREMIUM = 30
+
   PLANS = [
-    { name: 'Basic Plan', description: 'Basic plan with limited features.', price: 10 },
-    { name: 'Standard Plan', description: 'Standard plan with additional features.', price: 20 },
-    { name: 'Premium Plan', description: 'Premium plan with all features included.', price: 30 }
+    { type: BASIC, name: 'Basic Plan', description: 'Basic plan with limited features.', price: 10 },
+    { type: STANDARD, name: 'Standard Plan', description: 'Standard plan with additional features.', price: 20 },
+    { type: PREMIUM, name: 'Premium Plan', description: 'Premium plan with all features included.', price: 30 }
   ]
 
   def validate
     super
     errors.add(:name, "can't be empty") if self.name.empty?
     errors.add(:name, "must be unique") if Plan.where(name: self.name).count > 0
+    errors.add(:type, "must be a valid plan type") unless [BASIC, STANDARD, PREMIUM].include?(self.type)
     errors.add(:description, "can't be empty") if self.description.empty?
     errors.add(:price, "must be a positive number") if self.price.nil? || self.price <= 0
   end

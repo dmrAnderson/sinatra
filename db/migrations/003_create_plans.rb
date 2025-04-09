@@ -5,6 +5,7 @@ Sequel.migration do
     create_table(:plans) do
       primary_key :id
       String :name, null: false, unique: true
+      Integer :type, null: false, unique: true
       String :description, null: false
       Integer :price, null: false
       DateTime :created_at

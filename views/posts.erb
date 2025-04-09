@@ -1,0 +1,13 @@
+<h2>💡 Posts</h2>
+<% if @posts.empty? %>
+  <p>No posts available.</p>
+<% else %>
+  <ul>
+    <% @posts.each do |post| %>
+      <li>
+        <strong><%= post.title %></strong>
+        <i><%= post.content %></i>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

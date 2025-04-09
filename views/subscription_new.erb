@@ -1,0 +1,21 @@
+<h2>💼 Plans</h2>
+<% if settings.plans.empty? %>
+  <p>No plans available.</p>
+<% else %>
+ <form action="/subscriptions" method="post">
+    <p>Choose a plan to subscribe:</p>
+    <% settings.plans.each do |plan| %>
+     <div>
+       <input type="radio" name="plan_id" value="<%= plan.id %>" required id="plan_<%= plan.id %>" <%= 'checked' if current_plan&.id == plan.id %> disabled="<%= !!current_plan %>">
+       <label for="plan_<%= plan.id %>">
+         <strong><%= plan.name %> (Price: $<%= plan.price %>)</strong>
+         <br>
+         <i><%= plan.description %></i>
+         <br>
+         <small><%= permissions(plan.type).map { |key, value| "#{key}: #{value.select { |_k, v| v }.keys.join(', ')}" }.join('. ') %>.</small>
+       </label>
+     </div>
+    <% end %>
+   <button type="submit" disabled="<%= !!current_plan %>">Subscribe</button>
+  </form>
+<% end %>

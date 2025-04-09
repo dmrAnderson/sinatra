@@ -7,6 +7,7 @@ class User < Sequel::Model
   plugin :timestamps, update_on_create: true
 
   one_to_many :posts
+  one_to_many :subscriptions
 
   def password=(new_password)
     self.password_digest = BCrypt::Password.create(new_password)

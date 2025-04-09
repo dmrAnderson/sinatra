@@ -7,30 +7,44 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
 </head>
 <body>
-<header>
-  <h1>Welcome to My Website</h1>
-  <% if logged_in? %>
-    <blockquote>
-      <strong>Current User: <%= current_user.email %></strong>
-    </blockquote>
-  <% end %>
-  <nav>
-    <ul>
-      <% if logged_in? %>
-        <li><a href="/">🏠 Dashboard</a></li>
-        <li><a href="/logout">🚪 Logout</a></li>
-      <% else %>
-        <li><a href="/login">🔑 Login</a></li>
-        <li><a href="/signup">✍️ Signup</a></li>
-      <% end %>
-    </ul>
-  </nav>
-</header>
-<main>
-  <%= yield %>
-</main>
-<footer>
-  <p>&copy; 2025 My Website</p>
-</footer>
+  <header>
+    <h1>Welcome to My Website</h1>
+    <% if logged_in? %>
+      <blockquote>
+        <small>👤 Current User: <strong><%= current_user.email %></strong></small>
+        <br>
+        <% if current_plan %>
+          <small>⭐ Current Plan: <strong><%= current_plan.name %></strong> (until <%= current_subscription.end_date.strftime('%F') %>)</small>
+        <% else %>
+          <small>⭐ Current Plan: <strong>None</strong></small>
+        <% end %>
+      </blockquote>
+    <% end %>
+    <nav>
+      <ul>
+        <% if logged_in? %>
+          <li><a href="/">🏠 Dashboard</a></li>
+          <li><a href="/subscriptions">💼 Plans</a></li>
+          <% if authorized?(Post, :read) %>
+            <li><a href="/posts">💡 Posts</a></li>
+          <% else  %>
+            <li>
+              <a href="javascript:void(0)"><s title="You don't have permission to view posts">💡 Posts</s></a>
+            </li>
+          <% end %>
+          <li><a href="/logout">🚪 Logout</a></li>
+        <% else %>
+          <li><a href="/login">🔑 Login</a></li>
+          <li><a href="/signup">✍️ Signup</a></li>
+        <% end %>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <%= yield %>
+  </main>
+  <footer>
+    <p>&copy; 2025 My Website</p>
+  </footer>
 </body>
 </html>
