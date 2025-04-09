@@ -13,110 +13,225 @@ class AppTest < Minitest::Test
     Sinatra::Application
   end
 
+  def cleanup_db
+    Post.dataset.delete
+    User.dataset.delete
+    yield
+  ensure
+    Post.dataset.delete
+    User.dataset.delete
+  end
+
   def test_root
-    User.dataset.delete
+    cleanup_db do
+      get '/'
 
-    get '/'
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/login', last_response.location
+      user = User.create(email: 'test@example.com', password: 'secret123')
+      user.add_post(title: 'Test Post', content: 'This is a test post.')
 
-    user = User.create(email: 'test@example.com', password: 'secret123')
+      get '/', {}, { 'rack.session' => { user_id: user.id } }
 
-    get '/', {}, { 'rack.session' => { user_id: user.id } }
-
-    assert_equal 200, last_response.status
-    assert_equal 'text/html;charset=utf-8', last_response.content_type
-
-    User.dataset.delete
+      assert_equal 200, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+    end
   end
 
   def test_signup
-    User.dataset.delete
+    cleanup_db do
+      user = User.create(email: 'test@example.com', password: 'secret123')
 
-    user = User.create(email: 'test@example.com', password: 'secret123')
+      get '/signup', {}, { 'rack.session' => { user_id: user.id } }
 
-    get '/signup', {}, { 'rack.session' => { user_id: user.id } }
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/', last_response.location
+      get '/signup', {}, { 'rack.session' => { user_id: nil } }
 
-    get '/signup', {}, { 'rack.session' => { user_id: nil } }
+      assert_equal 200, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
 
-    assert_equal 200, last_response.status
-    assert_equal 'text/html;charset=utf-8', last_response.content_type
+      post '/signup', {}, { 'rack.session' => { user_id: user.id } }
 
-    post '/signup', {}, { 'rack.session' => { user_id: user.id } }
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/', last_response.location
+      post '/signup', { email: '', password: '' }, { 'rack.session' => { user_id: nil } }
 
-    post '/signup', { email: '', password: '' }, { 'rack.session' => { user_id: nil } }
+      assert_equal 422, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
 
-    assert_equal 422, last_response.status
-    assert_equal 'text/html;charset=utf-8', last_response.content_type
+      User.dataset.delete
 
-    User.dataset.delete
+      post '/signup', email: 'test@example.com', password: 'secret123'
 
-    post '/signup', email: 'test@example.com', password: 'secret123'
-
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/', last_response.location
-    assert_equal 1, User.count
-
-    User.dataset.delete
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
+      assert_equal 1, User.count
+    end
   end
 
   def test_login
-    User.dataset.delete
+    cleanup_db do
+      user = User.create(email: 'test@example.com', password: 'secret123')
 
-    user = User.create(email: 'test@example.com', password: 'secret123')
+      get '/login', {}, { 'rack.session' => { user_id: user.id } }
 
-    get '/login', {}, { 'rack.session' => { user_id: user.id } }
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/', last_response.location
+      get '/login', {}, { 'rack.session' => { user_id: nil } }
 
-    get '/login', {}, { 'rack.session' => { user_id: nil } }
+      assert_equal 200, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
 
-    assert_equal 200, last_response.status
-    assert_equal 'text/html;charset=utf-8', last_response.content_type
+      post '/login', {}, { 'rack.session' => { user_id: user.id } }
 
-    post '/login', {}, { 'rack.session' => { user_id: user.id } }
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/', last_response.location
+      post '/login', { email: '', password: '' }, { 'rack.session' => { user_id: nil } }
 
-    post '/login', { email: '', password: '' }, { 'rack.session' => { user_id: nil } }
+      assert_equal 422, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
 
-    assert_equal 422, last_response.status
-    assert_equal 'text/html;charset=utf-8', last_response.content_type
+      post '/login', email: 'test@example.com', password: 'secret123'
 
-    post '/login', email: 'test@example.com', password: 'secret123'
-
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/', last_response.location
-    assert_equal user.id, last_request.env['rack.session'][:user_id]
-
-    User.dataset.delete
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
+      assert_equal user.id, last_request.env['rack.session'][:user_id]
+    end
   end
 
   def test_logout
-    User.dataset.delete
+    cleanup_db do
+      user = User.create(email: 'test@example.com', password: 'secret123')
 
-    user = User.create(email: 'test@example.com', password: 'secret123')
+      get '/logout', {}, { 'rack.session' => { user_id: nil } }
 
-    get '/logout', {}, { 'rack.session' => { user_id: nil } }
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/login', last_response.location
+      get '/logout', {}, { 'rack.session' => { user_id: user.id } }
 
-    get '/logout', {}, { 'rack.session' => { user_id: user.id } }
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
+      assert_nil last_request.env['rack.session'][:user_id]
+    end
+  end
 
-    assert_equal 302, last_response.status
-    assert_equal 'http://example.org/login', last_response.location
-    assert_nil last_request.env['rack.session'][:user_id]
+  def test_post_new
+    cleanup_db do
+      get '/posts/new', {}, { 'rack.session' => { user_id: nil } }
 
-    User.dataset.delete
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
+
+      user = User.create(email: 'test@example.com', password: 'secret123')
+
+      get '/posts/new', {}, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 200, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+    end
+  end
+
+  def test_post_create
+    cleanup_db do
+      post '/posts', {}, { 'rack.session' => { user_id: nil } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
+
+      user = User.create(email: 'test@example.com', password: 'secret123')
+
+      post '/posts', { title: '', content: '' }, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 422, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+
+      post '/posts', { title: 'Test Post', content: 'This is a test post.' }, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
+      assert_equal 1, Post.count
+    end
+  end
+
+  def test_post_edit
+    cleanup_db do
+      get '/posts/1/edit', {}, { 'rack.session' => { user_id: nil } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
+
+      user = User.create(email: 'test@example.com', password: 'secret123')
+
+      get '/posts/1/edit', {}, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 404, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+
+      post = user.add_post(title: 'Test Post', content: 'This is a test post.')
+
+      get "/posts/#{post.id}/edit", {}, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 200, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+    end
+  end
+
+  def test_post_update
+    cleanup_db do
+      patch '/posts/1', {}, { 'rack.session' => { user_id: nil } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
+
+      user = User.create(email: 'test@example.com', password: 'secret123')
+
+      patch '/posts/1', {}, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 404, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+
+      post = user.add_post(title: 'Test Post', content: 'This is a test post.')
+
+      patch "/posts/#{post.id}", { title: '', content: '' }, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 422, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+
+      patch "/posts/#{post.id}", { title: 'Updated Post', content: 'This is an updated post.' }, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
+    end
+  end
+
+  def test_post_delete
+    cleanup_db do
+      delete '/posts/1', {}, { 'rack.session' => { user_id: nil } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/login', last_response.location
+
+      user = User.create(email: 'test@example.com', password: 'secret123')
+
+      delete '/posts/1', {}, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 404, last_response.status
+      assert_equal 'text/html;charset=utf-8', last_response.content_type
+
+      post = user.add_post(title: 'Test Post', content: 'This is a test post.')
+
+      delete "/posts/#{post.id}", {}, { 'rack.session' => { user_id: user.id } }
+
+      assert_equal 302, last_response.status
+      assert_equal 'http://example.org/', last_response.location
+      assert_equal 0, Post.count
+    end
   end
 end

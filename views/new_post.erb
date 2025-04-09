@@ -1,0 +1,12 @@
+<h2>📝 New Post</h2>
+<form action="/posts" method="post">
+  <label for="title">Title:</label>
+  <br>
+  <input type="text" id="title" name="title" required value="<%= @post.title %>">
+  <br>
+  <label for="content">Content:</label>
+  <br>
+  <textarea id="content" name="content" required><%= @post.content %></textarea>
+  <br>
+  <button type="submit">Create Post</button>
+</form>

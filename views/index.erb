@@ -1,1 +1,30 @@
-<h2>Dashboard</h2>
+<h2>🏠 Dashboard</h2>
+<a href="/posts/new">📝 New Post</a>
+<% if @posts.empty? %>
+  <p>No posts available.</p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Content</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @posts.each do |post| %>
+        <tr>
+          <td><%= post.title %></td>
+          <td><%= post.content %></td>
+          <td>
+            <a href="/posts/<%= post.id %>/edit">✏️ Edit post</a>
+            <form action="/posts/<%= post.id %>" method="post">
+              <input type="hidden" name="_method" value="delete">
+              <button type="submit">🗑️ Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
