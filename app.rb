@@ -39,6 +39,10 @@ helpers do
     @current_plan ||= Plan[current_subscription.plan_id]
   end
 
+  def subscribed?
+    !!current_subscription
+  end
+
   def logged_in?
     !!current_user
   end
@@ -61,6 +65,10 @@ helpers do
 
   def permissions(plan)
     {
+      Subscription => {
+        read: true,
+        create: true,
+      },
       Post => {
         read: plan >= Plan::BASIC,
         create: plan >= Plan::STANDARD,
@@ -74,8 +82,15 @@ helpers do
     permissions(plan).dig(*actions)
   end
 
-  def authorize!(*actions, plan: current_plan&.type.to_i)
-    authorized?(*actions, plan: plan) || halt(403)
+  def authorize!(*actions)
+    authorized?(*actions) || halt(403)
+  end
+end
+
+before do
+  if subscribed? && current_subscription.expired?
+    current_subscription.deactivate
+    @current_subscription = nil
   end
 end
 
@@ -127,14 +142,18 @@ get '/logout' do
   redirect '/login'
 end
 
-get '/subscriptions/new' do
+get '/subscriptions' do
   authenticate!
-  erb :subscription_new, layout: :application
+  authorize!(Subscription, :read)
+  # @subscriptions = current_user.subscriptions
+  @subscriptions = Subscription.association_join(:plan).where(user_id: current_user.id)
+  erb :subscriptions, layout: :application
 end
 
 post '/subscriptions' do
   authenticate!
-  halt 403 if current_subscription && !current_subscription.expired?
+  authorize!(Subscription, :update)
+  halt 403 if subscribed?
   subscription = Subscription.new(user_id: current_user.id, plan_id: params[:plan_id])
   if subscription.valid?
     subscription.save

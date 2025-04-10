@@ -13,7 +13,7 @@
       <blockquote>
         <small>👤 Current User: <strong><%= current_user.email %></strong></small>
         <br>
-        <% if current_plan %>
+        <% if subscribed? %>
           <small>⭐ Current Plan: <strong><%= current_plan.name %></strong> (until <%= current_subscription.end_date.strftime('%F') %>)</small>
         <% else %>
           <small>⭐ Current Plan: <strong>None</strong></small>

@@ -10,14 +10,30 @@ class Subscription < Sequel::Model
   many_to_one :plan
 
   def end_date
-    return self.deactivated_at unless self.deactivated_at.nil?
+    return self.deactivated_at if deactivated?
 
     self.created_at + 30 * 24 * 60 * 60
   end
 
   def expired?
-    return true unless self.deactivated_at.nil?
+    return true if deactivated?
 
-    self.end_date < Time.now
+    end_date < Time.now
+  end
+
+  def deactivate
+    return false if deactivated?
+
+    self.deactivated_at = Time.now
+    self.save
+    true
+  end
+
+  def not_deactivated?
+    self.deactivated_at.nil?
+  end
+
+  def deactivated?
+    !not_deactivated?
   end
 end

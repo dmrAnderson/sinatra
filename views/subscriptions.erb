@@ -1,0 +1,50 @@
+<h2>💼 Plans</h2>
+<% if settings.plans.empty? %>
+  <p>No plans available.</p>
+<% else %>
+  <form action="/subscriptions" method="post">
+    <p>Choose a plan to subscribe for 1 month:</p>
+    <% settings.plans.each do |plan| %>
+      <div>
+        <input type="radio" name="plan_id" value="<%= plan.id %>" required id="plan_<%= plan.id %>" <%= 'checked' if current_plan&.id == plan.id %> <%= 'disabled' if subscribed? %>>
+        <label for="plan_<%= plan.id %>">
+          <strong><%= plan.name %> (Price: $<%= plan.price %>)</strong>
+          <br>
+          <i><%= plan.description %></i>
+          <br>
+          <small><%= permissions(plan.type).map { |key, value| "#{key}: #{value.select { |_k, v| v }.keys.join(', ')}" }.join('. ') %>.</small>
+        </label>
+      </div>
+    <% end %>
+    <button type="submit" <%= 'disabled' if subscribed? %>>Subscribe</button>
+  </form>
+<% end %>
+
+<details>
+  <summary>Subscription History</summary>
+  <p>Here are your past subscriptions:</p>
+  <% if @subscriptions.empty? %>
+    <p>No subscription history available.</p>
+  <% else %>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @subscriptions.each do |subscription| %>
+          <tr>
+            <td><strong><%= subscription.plan.name %></strong></td>
+            <td><%= subscription.created_at.strftime('%F') %></td>
+            <td><%= subscription.end_date.strftime('%F') %></td>
+            <td>$<%= subscription.plan.price %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</details>
