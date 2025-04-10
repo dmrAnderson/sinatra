@@ -21,5 +21,5 @@ Defines `db` (PostgreSQL), `app` (Sinatra), and `pgadmin` services using Docker.
 Execute your Sinatra tests using:
 
 ```bash
-docker-compose run --rm app bundle exec ruby -Itest app_test.rb
+docker-compose run --rm app bundle exec ruby -Itest test/app_test.rb
 ```

@@ -2,11 +2,14 @@
 
 require 'sinatra'
 require 'sequel'
+require 'sequel/extensions/migration'
 
 set :environment, ENV.fetch('RACK_ENV', 'development')
 set :database_url, ENV.fetch('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/sinatra_app')
 set :database, Sequel.connect(settings.database_url)
 set :session_secret, ENV.fetch('SUPER_SECRET_KEY', settings.database_url * 2)
+
+Sequel::Migrator.run(settings.database, 'db/migrations')
 
 require './models/user'
 require './models/post'
@@ -27,7 +30,7 @@ helpers do
   def current_subscription
     return unless current_user
 
-    @current_subscription ||= Subscription.association_join(:plan).first(deactivated_at: nil, user_id: current_user.id)
+    @current_subscription ||= Subscription.first(deactivated_at: nil, user_id: current_user.id)
   end
 
   def current_plan
@@ -159,12 +162,13 @@ end
 post '/posts' do
   authenticate!
   authorize!(Post, :create)
-  @post = Post.new(title: params[:title], content: params[:content])
-  @post.user_id = current_user.id
-  if @post.valid?
-    @post.save
+  post = Post.new(title: params[:title], content: params[:content])
+  post.user_id = current_user.id
+  if post.valid?
+    post.save
     redirect '/'
   else
+    @post = post
     status 422
     erb :post_new, layout: :application
   end
@@ -173,8 +177,9 @@ end
 get '/posts/:id/edit' do
   authenticate!
   authorize!(Post, :update)
-  @post = Post.first(id: [params[:id].to_i], user_id: current_user.id)
-  if @post
+  post = Post.first(id: [params[:id].to_i], user_id: current_user.id)
+  if post
+    @post = post
     erb :post_edit, layout: :application
   else
     halt 404
@@ -184,15 +189,16 @@ end
 patch '/posts/:id' do
   authenticate!
   authorize!(Post, :update)
-  @post = Post.first(id: [params[:id].to_i], user_id: current_user.id)
-  if @post
-    @post.title = params[:title]
-    @post.content = params[:content]
-    if @post.valid?
-      @post.save
+  post = Post.first(id: [params[:id].to_i], user_id: current_user.id)
+  if post
+    post.title = params[:title]
+    post.content = params[:content]
+    if post.valid?
+      post.save
       redirect '/'
     else
       status 422
+      @post = post
       erb :post_edit, layout: :application
     end
   else
@@ -203,9 +209,9 @@ end
 delete '/posts/:id' do
   authenticate!
   authorize!(Post, :delete)
-  @post = Post.first(id: [params[:id].to_i], user_id: current_user.id)
-  if @post
-    @post.delete
+  post = Post.first(id: [params[:id].to_i], user_id: current_user.id)
+  if post
+    post.delete
     redirect '/'
   else
     halt 404
