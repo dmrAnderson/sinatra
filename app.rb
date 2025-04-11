@@ -3,6 +3,11 @@
 require 'sinatra'
 require 'sequel'
 require 'sequel/extensions/migration'
+require 'stripe'
+require 'json'
+
+Stripe.api_key = ENV.fetch('STRIPE_API_KEY')
+Stripe.log_level = Stripe::LEVEL_INFO
 
 set :environment, ENV.fetch('RACK_ENV', 'development')
 set :database_url, ENV.fetch('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/sinatra_app')
@@ -68,6 +73,7 @@ helpers do
       Subscription => {
         read: true,
         create: true,
+        delete: true
       },
       Post => {
         read: plan >= Plan::BASIC,
@@ -84,6 +90,21 @@ helpers do
 
   def authorize!(*actions)
     authorized?(*actions) || halt(403)
+  end
+
+  def create_stripe_customer(user)
+    return if ENV.fetch('RACK_ENV') == 'test'
+
+    Stripe::Customer.create(
+      email: user.email,
+      name: user.email.split('@')[0],
+      description: "Customer for #{user.email}",
+      metadata: {
+        user_id: user.id
+      }
+    )
+  rescue Stripe::StripeError => e
+    puts "Stripe error: #{e.message}"
   end
 end
 
@@ -111,6 +132,7 @@ post '/signup' do
   user.password = params[:password]
   if user.valid?
     user.save
+    create_stripe_customer(user)
     login(user)
     redirect '/'
   else
@@ -145,23 +167,62 @@ end
 get '/subscriptions' do
   authenticate!
   authorize!(Subscription, :read)
-  # @subscriptions = current_user.subscriptions
   @subscriptions = Subscription.association_join(:plan).where(user_id: current_user.id)
   erb :subscriptions, layout: :application
 end
 
+get '/subscription' do
+  authenticate!
+  authorize!(Subscription, :read)
+  halt 403 unless subscribed?
+
+  session = Stripe::BillingPortal::Session.create(
+    customer: current_user.stripe_customer_id,
+    return_url: 'http://localhost:4567/subscriptions'
+  )
+
+  redirect session.url
+end
+
+delete '/subscription' do
+  authenticate!
+  authorize!(Subscription, :delete)
+  halt 403 unless subscribed?
+
+  Stripe::Subscription.update(
+    current_subscription.stripe_subscription_id,
+    { cancel_at_period_end: true }
+  )
+
+  current_subscription.deactivate
+
+  redirect '/'
+end
+
 post '/subscriptions' do
   authenticate!
-  authorize!(Subscription, :update)
+  authorize!(Subscription, :create)
   halt 403 if subscribed?
-  subscription = Subscription.new(user_id: current_user.id, plan_id: params[:plan_id])
-  if subscription.valid?
-    subscription.save
-    redirect '/'
-  else
-    status 422
-    erb :subscription_new, layout: :application
-  end
+
+  plan = Plan[params[:plan_id].to_i]
+
+  product = Stripe::Product.list.detect { |product| product.metadata['plan_id'] == plan.id.to_s }
+  price = Stripe::Price.list.find { |price| price.product == product.id }
+
+  session = Stripe::Checkout::Session.create(
+    customer: current_user.stripe_customer_id,
+    line_items: [
+      {
+        price: price.id,
+        quantity: 1,
+      }
+    ],
+    mode: 'subscription',
+    success_url: 'http://localhost:4567/subscriptions',
+    cancel_url: 'http://localhost:4567/subscriptions',
+  )
+
+  redirect session.url
 end
 
 get '/posts' do
@@ -235,4 +296,56 @@ delete '/posts/:id' do
   else
     halt 404
   end
+end
+
+post '/stripe/webhooks' do
+  endpoint_secret = 'whsec_3f5902a4cbc5005516d25b2d37362cf191f23722e6616b261b598c1db72a4eb4'
+  payload = request.body.read
+
+  begin
+    event = Stripe::Event.construct_from(
+      JSON.parse(payload, symbolize_names: true)
+    )
+  rescue JSON::ParserError => e
+    puts "⚠️  Webhook error while parsing basic request. #{e.message}"
+    status 400
+    return
+  end
+
+  if endpoint_secret
+    signature = request.env['HTTP_STRIPE_SIGNATURE']
+
+    begin
+      event = Stripe::Webhook.construct_event(
+        payload, signature, endpoint_secret
+      )
+    rescue Stripe::SignatureVerificationError => e
+      puts "⚠️  Webhook signature verification failed. #{e.message}"
+      status 400
+    end
+  end
+
+  case event.type
+  when 'customer.created'
+    customer = event.data.object
+    User.first(email: customer.email).update(stripe_customer_id: customer.id)
+  when 'invoice.payment_succeeded'
+    invoice = event.data.object
+
+
+    plan_id = Stripe::Product.retrieve(invoice.lines.data[0].pricing.price_details.product).metadata['plan_id']
+    user_id = Stripe::Customer.retrieve(invoice.customer).metadata['user_id']
+    hosted_invoice_url = invoice.hosted_invoice_url
+    stripe_subscription_id = invoice.parent.subscription_details.subscription
+
+    subscription = Subscription.new(
+      user_id: user_id,
+      plan_id: plan_id,
+      stripe_subscription_id: stripe_subscription_id,
+      hosted_invoice_url: hosted_invoice_url)
+    subscription.save
+  else
+    puts "Unhandled event type: #{event.type}"
+  end
+  status 200
 end

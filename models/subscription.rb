@@ -9,6 +9,12 @@ class Subscription < Sequel::Model
   many_to_one :user
   many_to_one :plan
 
+  def validate
+    super
+    errors.add(:user_id, "can't be empty") if self.user_id.nil?
+    errors.add(:plan_id, "can't be empty") if self.plan_id.nil?
+  end
+
   def end_date
     return self.deactivated_at if deactivated?
 

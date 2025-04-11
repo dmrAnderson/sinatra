@@ -32,7 +32,22 @@ class Plan < Sequel::Model
   def self.seed
     return if Plan.count > 0
 
-    # Create default plans
-    PLANS.each { |plan| Plan.create(plan) }
+    PLANS.each do |data|
+      plan = Plan.create(data)
+
+      next if ENV['RACK_ENV'] == 'test'
+
+      product = Stripe::Product.create(
+        name: plan.name,
+        description: plan.description,
+        metadata: { plan_id: plan.id }
+      )
+      Stripe::Plan.create(
+        currency: 'usd',
+        interval: 'month',
+        amount: plan.price * 100,
+        product: product.id
+      )
+    end
   end
 end

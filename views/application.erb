@@ -11,12 +11,17 @@
     <h1>Welcome to My Website</h1>
     <% if logged_in? %>
       <blockquote>
-        <small>👤 Current User: <strong><%= current_user.email %></strong></small>
+        <span>👤 Current User: <strong><%= current_user.email %></strong><%= ' ✅' unless current_user.stripe_customer_id.nil? %></span>
         <br>
         <% if subscribed? %>
-          <small>⭐ Current Plan: <strong><%= current_plan.name %></strong> (until <%= current_subscription.end_date.strftime('%F') %>)</small>
+          <span>⭐ Current Plan: <a href="/subscription" target="_blank"><%= current_plan.name %> 🔗</a></span>
+          <br>
+          <form action="/subscription" method="post">
+            <input type="hidden" name="_method" value="delete">
+            <button type="submit">Unsubscribe</button>
+          </form>
         <% else %>
-          <small>⭐ Current Plan: <strong>None</strong></small>
+          <span>⭐ Current Plan: <strong>None</strong></span>
         <% end %>
       </blockquote>
     <% end %>

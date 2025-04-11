@@ -20,7 +20,7 @@ class User < Sequel::Model
   def validate
     super
     errors.add(:email, "can't be empty") if self.email.empty?
-    errors.add(:email, "already exists") if User.where(email: self.email).count > 0
+    errors.add(:email, "already exists") if User.where(email: self.email).count > 0 && self.new?
     errors.add(:password_digest, "can't be empty") if self.password_digest.empty?
   end
 end

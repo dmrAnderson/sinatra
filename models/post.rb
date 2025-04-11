@@ -9,6 +9,7 @@ class Post < Sequel::Model
 
   def validate
     super
+    errors.add(:user_id, "can't be empty") if self.user_id.nil?
     errors.add(:title, "can't be empty") if self.title.empty?
     errors.add(:content, "can't be empty") if self.content.empty?
   end
