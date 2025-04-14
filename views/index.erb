@@ -1,18 +1,18 @@
-<h2>🏠 Dashboard</h2>
+<h2><%= I18n.t('navigation.dashboard.emoji') %> <%= I18n.t('navigation.dashboard.name') %></h2>
 <% if authorized?(Post, :create) %>
-  <a href="/posts/new">📝 New Post</a>
+  <a href="/posts/new"><%= I18n.t('posts.new.emoji') %> <%= I18n.t('posts.new.name') %></a>
 <% else %>
-  <a href="javascript:void(0)"><s title="You don't have permission to view posts">📝 New Post</s></a>
+  <a href="javascript:void(0)"><s title="You don't have permission to view posts"><%= I18n.t('posts.new.emoji') %> <%= I18n.t('posts.new.name') %></s></a>
 <% end %>
 <% if @posts.empty? %>
-  <p>No posts available.</p>
+  <p><%= I18n.t('posts.index.empty') %></p>
 <% else %>
   <table>
     <thead>
       <tr>
-        <th>Title</th>
-        <th>Content</th>
-        <th>Actions</th>
+        <th><%= I18n.t('posts.index.title') %></th>
+        <th><%= I18n.t('posts.index.content') %></th>
+        <th><%= I18n.t('posts.index.actions') %></th>
       </tr>
     </thead>
     <tbody>
@@ -22,19 +22,19 @@
           <td><i><%= post.content %></i></td>
           <td>
             <% if authorized?(Post, :update) %>
-              <a href="/posts/<%= post.id %>/edit">✏️ Edit post</a>
+              <a href="/posts/<%= post.id %>/edit"><%= I18n.t('posts.edit.emoji') %> <%= I18n.t('posts.edit.name') %></a>
             <% else %>
-              <a href="javascript:void(0)"><s title="You don't have permission to view posts">✏️ Edit post</s></a>
+              <a href="javascript:void(0)"><s title="You don't have permission to view posts"><%= I18n.t('posts.edit.emoji') %> <%= I18n.t('posts.edit.name') %></s></a>
             <% end %>
             <% if authorized?(Post, :delete) %>
               <form action="/posts/<%= post.id %>" method="post" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
-                <button type="submit">🗑️ Delete</button>
+                <button type="submit"><%= I18n.t('posts.delete.emoji') %> <%= I18n.t('posts.delete.name') %></button>
               </form>
             <% else %>
               <form action="javascript:void(0)" style="display:inline;">
                 <input type="hidden" name="_method" value="delete">
-                <button type="submit" disabled title="You don't have permission to view posts">🗑️ Delete</button>
+                <button type="submit" disabled title="You don't have permission to view posts"><%= I18n.t('posts.delete.emoji') %> <%= I18n.t('posts.delete.name') %></button>
               </form>
             <% end %>
           </td>

@@ -5,13 +5,18 @@ require 'sequel'
 require 'sequel/extensions/migration'
 require 'stripe'
 require 'json'
+require 'i18n'
 
 Stripe.api_key = ENV.fetch('STRIPE_API_KEY')
 Stripe.log_level = Stripe::LEVEL_INFO
 
+I18n.load_path += Dir[File.expand_path("config/locales") + "/*.yml"]
+I18n.available_locales = [:en, :ua]
+I18n.default_locale = :en
+
 set :environment, ENV.fetch('RACK_ENV', 'development')
 set :database_url, ENV.fetch('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/sinatra_app')
-set :database, Sequel.connect(settings.database_url)
+set :database, Sequel.connect(settings.database_url, logger: Logger.new('log/db.log'))
 set :session_secret, ENV.fetch('SUPER_SECRET_KEY', settings.database_url * 2)
 
 Sequel::Migrator.run(settings.database, 'db/migrations')
@@ -92,6 +97,15 @@ helpers do
     authorized?(*actions) || halt(403)
   end
 
+  def current_locale
+    @current_locale ||= current_user&.localization&.to_sym
+  end
+
+  def current_locale=(locale)
+    current_user.update(localization: locale)
+    @current_locale = locale.to_sym
+  end
+
   def create_stripe_customer(user)
     return if ENV.fetch('RACK_ENV') == 'test'
 
@@ -113,6 +127,26 @@ before do
     current_subscription.deactivate
     @current_subscription = nil
   end
+
+  I18n.locale = current_locale if current_locale
+end
+
+post '/locale' do
+  authenticate!
+
+  locale = params[:locale].to_s
+
+  p '-----------1'
+  return halt 400 if locale.empty?
+  p '-----------2'
+  return halt 422 unless I18n.available_locales.include?(locale.to_sym)
+  p '-----------3'
+
+  p "-----------#{locale}"
+  self.current_locale = locale if current_locale != locale
+  p "-----------#{current_locale}"
+
+  redirect request.referer || '/'
 end
 
 get '/' do

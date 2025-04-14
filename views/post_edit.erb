@@ -1,13 +1,13 @@
-<h2>✏️ Edit post</h2>
+<h2><%= I18n.t('posts.edit.emoji') %> <%= I18n.t('posts.edit.name') %></h2>
 <form action="/posts/<%= @post.id %>" method="post">
   <input type="hidden" name="_method" value="patch">
-  <label for="title">Title:</label>
+  <label for="title"><%= I18n.t('posts.index.title') %>:</label>
   <br>
   <input type="text" id="title" name="title" required value="<%= @post.title %>">
   <br>
-  <label for="content">Content:</label>
+  <label for="content"><%= I18n.t('posts.index.content') %>:</label>
   <br>
   <textarea id="content" name="content" required><%= @post.content %></textarea>
   <br>
-  <button type="submit">Update Post</button>
+  <button type="submit"><%= I18n.t('posts.update.emoji') %> <%= I18n.t('posts.update.name') %></button>
 </form>

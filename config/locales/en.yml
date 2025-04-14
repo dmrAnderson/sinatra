@@ -1,0 +1,58 @@
+en:
+  supported_locales:
+    ua: 🇺🇦 Ukrainian
+    en: 🇬🇧 English
+  title: Basic HTML Page
+  navigation:
+    dashboard:
+      name: Dashboard
+      emoji: 🏠
+    plans:
+      name: Plans
+      emoji: 💼
+    posts:
+      name: Posts
+      emoji: 💡
+    logout:
+      name: Logout
+      emoji: 🚪
+    login:
+      name: Login
+      emoji: 🔑
+    signup:
+      name: Sign Up
+      emoji: ✍️
+  posts:
+    new:
+      name: New Post
+      emoji: 📝
+    create:
+      name: Create Post
+      emoji: ✅
+    index:
+      empty: No posts available.
+      title: Title
+      content: Content
+      actions: Actions
+    edit:
+      name: Edit post
+      emoji: ✏️
+    update:
+      name: Update post
+      emoji: 🔄
+    delete:
+      name: Delete post
+      emoji: 🗑️
+  subscriptions:
+    new:
+      name: Choose a plan to subscribe for 1 month
+    create:
+      name: Create Subscription
+      emoji: ✅
+    index:
+      history: Subscription History
+      empty: No plans available.
+      name: Name
+      start_date: Start Date
+      end_date: End Date
+      price: Price

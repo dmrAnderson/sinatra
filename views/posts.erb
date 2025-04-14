@@ -1,6 +1,6 @@
-<h2>💡 Posts</h2>
+<h2><%= I18n.t('navigation.posts.emoji') %> <%= I18n.t('navigation.posts.name') %></h2>
 <% if @posts.empty? %>
-  <p>No posts available.</p>
+  <p><%= I18n.t('posts.index.empty') %></p>
 <% else %>
   <ul>
     <% @posts.each do |post| %>

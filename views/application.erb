@@ -3,13 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Basic HTML Page</title>
+  <title><%= I18n.t('title') %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
 </head>
 <body>
   <header>
-    <h1>Welcome to My Website</h1>
+    <h1><%= I18n.t('title') %></h1>
     <% if logged_in? %>
+      <form action="/locale" method="post">
+        <select name="locale" onchange="this.form.submit()">
+          <% I18n.available_locales.each do |locale| %>
+            <option value="<%= locale %>" <%= 'selected' if current_locale == locale %>><%= I18n.t(locale, scope: :supported_locales) %></option>
+          <% end %>
+        </select>
+      </form>
       <blockquote>
         <span>👤 Current User: <strong><%= current_user.email %></strong><%= ' ✅' unless current_user.stripe_customer_id.nil? %></span>
         <br>
@@ -28,19 +35,19 @@
     <nav>
       <ul>
         <% if logged_in? %>
-          <li><a href="/">🏠 Dashboard</a></li>
-          <li><a href="/subscriptions">💼 Plans</a></li>
-          <% if authorized?(Post, :read) %>
-            <li><a href="/posts">💡 Posts</a></li>
-          <% else  %>
-            <li>
-              <a href="javascript:void(0)"><s title="You don't have permission to view posts">💡 Posts</s></a>
-            </li>
-          <% end %>
-          <li><a href="/logout">🚪 Logout</a></li>
+          <li><a href="/"><%= I18n.t('navigation.dashboard.emoji') %> <%= I18n.t('navigation.dashboard.name') %></a></li>
+          <li><a href="/subscriptions"><%= I18n.t('navigation.plans.emoji') %> <%= I18n.t('navigation.plans.name') %></a></li>
+          <li>
+            <% if authorized?(Post, :read) %>
+              <a href="/posts"><%= I18n.t('navigation.posts.emoji') %> <%= I18n.t('navigation.posts.name') %></a>
+            <% else  %>
+              <a href="javascript:void(0)"><s title="You don't have permission to view posts"><%= I18n.t('navigation.posts.emoji') %> <%= I18n.t('navigation.posts.name') %></s></a>
+            <% end %>
+          </li>
+          <li><a href="/logout"><%= I18n.t('navigation.logout.emoji') %> <%= I18n.t('navigation.logout.name') %></a></li>
         <% else %>
-          <li><a href="/login">🔑 Login</a></li>
-          <li><a href="/signup">✍️ Signup</a></li>
+          <li><a href="/login"><%= I18n.t('navigation.login.emoji') %> <%= I18n.t('navigation.login.name') %></a></li>
+          <li><a href="/signup"><%= I18n.t('navigation.signup.emoji') %> <%= I18n.t('navigation.signup.name') %></a></li>
         <% end %>
       </ul>
     </nav>
@@ -49,7 +56,7 @@
     <%= yield %>
   </main>
   <footer>
-    <p>&copy; 2025 My Website</p>
+    <p>&copy; 2025 <%= I18n.t('title') %></p>
   </footer>
 </body>
 </html>

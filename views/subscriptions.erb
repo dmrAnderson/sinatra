@@ -1,9 +1,9 @@
 <h2>💼 Plans</h2>
 <% if settings.plans.empty? %>
-  <p>No plans available.</p>
+  <p><%= I18n.t('subscriptions.index.empty') %></p>
 <% else %>
   <form action="/subscriptions" method="post">
-    <p>Choose a plan to subscribe for 1 month:</p>
+    <p><%= I18n.t('subscriptions.new.name') %>:</p>
     <% settings.plans.each do |plan| %>
       <div>
         <input type="radio" name="plan_id" value="<%= plan.id %>" required id="plan_<%= plan.id %>" <%= 'checked' if current_plan&.id == plan.id %> <%= 'disabled' if subscribed? %>>
@@ -16,23 +16,22 @@
         </label>
       </div>
     <% end %>
-    <button type="submit" <%= 'disabled' if subscribed? %>>Subscribe</button>
+    <button type="submit" <%= 'disabled' if subscribed? %>><%= I18n.t('subscriptions.create.emoji') %> <%= I18n.t('subscriptions.create.name') %></button>
   </form>
 <% end %>
 
 <details>
-  <summary>Subscription History</summary>
+  <summary><%= I18n.t('subscriptions.index.history') %></summary>
   <% if @subscriptions.empty? %>
-    <p>No subscription history available.</p>
+    <p><%= I18n.t('subscriptions.index.empty') %></p>
   <% else %>
-    <p>Here are your past subscriptions:</p>
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Price</th>
+          <th><%= I18n.t('subscriptions.index.name') %></th>
+          <th><%= I18n.t('subscriptions.index.start_date') %></th>
+          <th><%= I18n.t('subscriptions.index.end_date') %></th>
+          <th><%= I18n.t('subscriptions.index.price') %></th>
         </tr>
       </thead>
       <tbody>
