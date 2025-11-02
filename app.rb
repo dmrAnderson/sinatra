@@ -6,6 +6,7 @@ require 'sequel/extensions/migration'
 require 'stripe'
 require 'json'
 require 'i18n'
+require 'dotenv/load'
 
 Stripe.api_key = ENV.fetch('STRIPE_API_KEY')
 Stripe.log_level = Stripe::LEVEL_INFO
@@ -15,9 +16,10 @@ I18n.available_locales = [:en, :ua]
 I18n.default_locale = :en
 
 set :environment, ENV.fetch('RACK_ENV', 'development')
-set :database_url, ENV.fetch('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/sinatra_app')
+set :database_url, ENV.fetch('DATABASE_URL')
 set :database, Sequel.connect(settings.database_url, logger: Logger.new('log/db.log'))
 set :session_secret, ENV.fetch('SUPER_SECRET_KEY', settings.database_url * 2)
+set :stripe_webhook_secret, ENV.fetch('STRIPE_WEBHOOK_SECRET')
 
 Sequel::Migrator.run(settings.database, 'db/migrations')
 
@@ -136,15 +138,9 @@ post '/locale' do
 
   locale = params[:locale].to_s
 
-  p '-----------1'
   return halt 400 if locale.empty?
-  p '-----------2'
   return halt 422 unless I18n.available_locales.include?(locale.to_sym)
-  p '-----------3'
-
-  p "-----------#{locale}"
   self.current_locale = locale if current_locale != locale
-  p "-----------#{current_locale}"
 
   redirect request.referer || '/'
 end
@@ -236,6 +232,7 @@ end
 post '/subscriptions' do
   authenticate!
   authorize!(Subscription, :create)
+  halt 403 if current_user.stripe_customer_id.nil?
   halt 403 if subscribed?
 
   plan = Plan[params[:plan_id].to_i]
@@ -333,7 +330,6 @@ delete '/posts/:id' do
 end
 
 post '/stripe/webhooks' do
-  endpoint_secret = 'whsec_3f5902a4cbc5005516d25b2d37362cf191f23722e6616b261b598c1db72a4eb4'
   payload = request.body.read
 
   begin
@@ -346,12 +342,12 @@ post '/stripe/webhooks' do
     return
   end
 
-  if endpoint_secret
+  if settings.stripe_webhook_secret
     signature = request.env['HTTP_STRIPE_SIGNATURE']
 
     begin
       event = Stripe::Webhook.construct_event(
-        payload, signature, endpoint_secret
+        payload, signature, settings.stripe_webhook_secret
       )
     rescue Stripe::SignatureVerificationError => e
       puts "⚠️  Webhook signature verification failed. #{e.message}"
@@ -365,7 +361,6 @@ post '/stripe/webhooks' do
     User.first(email: customer.email).update(stripe_customer_id: customer.id)
   when 'invoice.payment_succeeded'
     invoice = event.data.object
-
 
     plan_id = Stripe::Product.retrieve(invoice.lines.data[0].pricing.price_details.product).metadata['plan_id']
     user_id = Stripe::Customer.retrieve(invoice.customer).metadata['user_id']

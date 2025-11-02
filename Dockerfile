@@ -1,4 +1,4 @@
-FROM ruby:3.3.7
+FROM ruby:3.3.10
 
 WORKDIR /code
 COPY . /code
