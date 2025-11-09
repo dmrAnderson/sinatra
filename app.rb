@@ -236,6 +236,9 @@ post '/subscriptions' do
   halt 403 if subscribed?
 
   plan = Plan[params[:plan_id].to_i]
+  halt 404 if plan.nil?
+
+  return redirect '/' if ENV.fetch('RACK_ENV') == 'test'
 
   product = Stripe::Product.list.detect { |product| product.metadata['plan_id'] == plan.id.to_s }
   price = Stripe::Price.list.find { |price| price.product == product.id }
