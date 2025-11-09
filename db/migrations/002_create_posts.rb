@@ -5,8 +5,8 @@ Sequel.migration do
     create_table(:posts) do
       primary_key :id
       foreign_key :user_id, :users, null: false
-      String :title, null: false
-      String :content, text: true, null: false
+      String :title
+      String :content, text: true
       DateTime :created_at
       DateTime :updated_at
     end

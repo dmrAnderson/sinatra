@@ -1,12 +1,24 @@
 # frozen_string_literal: true
 
 require 'sinatra'
+require 'mobility'
 require 'sequel'
 require 'sequel/extensions/migration'
 require 'stripe'
 require 'json'
 require 'i18n'
 require 'dotenv/load'
+
+Mobility.configure do
+  plugins do
+    reader
+    writer
+    sequel
+    fallbacks
+    locale_accessors
+    cache
+  end
+end
 
 Stripe.api_key = ENV.fetch('STRIPE_API_KEY')
 Stripe.log_level = Stripe::LEVEL_INFO

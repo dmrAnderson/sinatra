@@ -4,10 +4,24 @@
   <label for="title"><%= I18n.t('posts.index.title') %>:</label>
   <br>
   <input type="text" id="title" name="title" required value="<%= @post.title %>">
+  <% unless @post.errors[:title].nil? %>
+    <div class="error-messages">
+      <% @post.errors[:title].each do |error| %>
+        <p><%= error %></p>
+      <% end %>
+    </div>
+  <% end %>
   <br>
   <label for="content"><%= I18n.t('posts.index.content') %>:</label>
   <br>
   <textarea id="content" name="content" required><%= @post.content %></textarea>
+  <% unless @post.errors[:content].nil? %>
+    <div class="error-messages">
+      <% @post.errors[:content].each do |error| %>
+        <p><%= error %></p>
+      <% end %>
+    </div>
+  <% end %>
   <br>
   <button type="submit"><%= I18n.t('posts.update.emoji') %> <%= I18n.t('posts.update.name') %></button>
 </form>

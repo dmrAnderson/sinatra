@@ -1,4 +1,7 @@
 ua:
+  models:
+    errors:
+      empty: не може бути порожнім
   supported_locales:
     ua: 🇺🇦 Українська
     en: 🇬🇧 Англійська

@@ -1,12 +1,26 @@
-<h2><%= I18n.t('posts.edit.emoji') %> <%= I18n.t('posts.edit.name') %></h2>
+<h2><%= I18n.t('posts.new.emoji') %> <%= I18n.t('posts.new.name') %></h2>
 <form action="/posts" method="post">
   <label for="title"><%= I18n.t('posts.index.title') %>:</label>
   <br>
   <input type="text" id="title" name="title" required value="<%= @post.title %>">
+  <% unless @post.errors[:title].nil? %>
+    <div class="error-messages">
+      <% @post.errors[:title].each do |error| %>
+        <p><%= error %></p>
+      <% end %>
+    </div>
+  <% end %>
   <br>
   <label for="content"><%= I18n.t('posts.index.content') %>:</label>
   <br>
   <textarea id="content" name="content" required><%= @post.content %></textarea>
+  <% unless @post.errors[:content].nil? %>
+    <div class="error-messages">
+      <% @post.errors[:content].each do |error| %>
+        <p><%= error %></p>
+      <% end %>
+    </div>
+  <% end %>
   <br>
   <button type="submit"><%= I18n.t('posts.create.emoji') %> <%= I18n.t('posts.create.name') %></button>
 </form>
