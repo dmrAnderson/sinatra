@@ -134,6 +134,15 @@ helpers do
   rescue Stripe::StripeError => e
     puts "Stripe error: #{e.message}"
   end
+
+  # Detects the preferred locale from the Accept-Language header
+  def detect_locale
+    return I18n.default_locale unless request.env['HTTP_ACCEPT_LANGUAGE']
+    accepted = request.env['HTTP_ACCEPT_LANGUAGE'].split(',').map do |lang|
+      lang.split(';').first.strip.downcase.gsub('-', '_')
+    end
+    accepted.find { |loc| I18n.available_locales.map(&:to_s).include?(loc) } || I18n.default_locale
+  end
 end
 
 before do
@@ -142,7 +151,7 @@ before do
     @current_subscription = nil
   end
 
-  I18n.locale = current_locale if current_locale
+  I18n.locale = current_locale || detect_locale
 end
 
 post '/locale' do
